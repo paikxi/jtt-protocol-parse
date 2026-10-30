@@ -75,7 +75,11 @@ class ParseEngineTest {
         assertEquals("0", value(fields, "总电流"));          // (1000-1000) * 0.1 A
         assertEquals("50", value(fields, "SOC"));
         assertEquals("工作", value(fields, "DC-DC状态"));
-        assertEquals("1", value(fields, "档位"));
+        assertEquals("1档", value(fields, "档位"));
+        Node gear = node(fields, "档位");
+        assertNotNull(gear, "档位节点缺失");
+        assertEquals("无制动力", value(gear.getChildren(), "制动力"));
+        assertEquals("无驱动力", value(gear.getChildren(), "驱动力"));
         assertEquals("5000", value(fields, "绝缘电阻"));
         assertEquals("0", value(fields, "加速踏板行程值"));
         assertEquals("0", value(fields, "制动踏板状态"));
@@ -94,6 +98,23 @@ class ParseEngineTest {
         assertEquals("0", value(motorFields, "驱动电机转矩"));      // (20000-20000)*0.1
         assertEquals("400", value(motorFields, "电机控制器输入电压")); // 4000*0.1
         assertEquals("0", value(motorFields, "电机控制器直流母线电流"));
+    }
+
+    @Test
+    void gearBits() {
+        // 档位 0x31 = b3~b0 0001(1档) + b4 有制动力 + b5 有驱动力
+        String body = "1A0A14112300"
+                + "01" + "01030103E8000100000FA003E832013113880000";
+        ParseResult r = one(frame(0x02, 0xFE, body));
+        assertTrue(r.isOk(), issues(r));
+
+        Node vehicle = node(r.getNodes(), "整车数据");
+        assertNotNull(vehicle, "整车数据节点缺失");
+        Node gear = node(vehicle.getChildren(), "档位");
+        assertNotNull(gear, "档位节点缺失");
+        assertEquals("1档", gear.getValue());
+        assertEquals("有制动力", value(gear.getChildren(), "制动力"));
+        assertEquals("有驱动力", value(gear.getChildren(), "驱动力"));
     }
 
     @Test
