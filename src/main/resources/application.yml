@@ -1,8 +1,2 @@
 server:
   port: 8080
-
-spring:
-  web:
-    resources:
-      # 前端零构建：直接把仓库 web/ 目录作为静态资源（http://localhost:8080/）
-      static-locations: file:web/

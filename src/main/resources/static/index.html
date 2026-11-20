@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>报文解析</title>
 <script src="./vendor/vue.global.prod.js"></script>
+<script src="./samples.js"></script>
 <style>
   :root { --b:#1f2733; --m:#68758a; --line:#e3e8ef; --bg:#f5f7fa; --ok:#0a7d43; --bad:#c62828; }
   * { box-sizing: border-box; }
@@ -43,7 +44,7 @@
     <select v-model="version" @change="onVersion">
       <option v-for="v in protocol.versions" :key="v.version" :value="v.version">{{ v.version }}</option>
     </select>
-    <select v-model="vendor">
+    <select v-model="vendor" @change="applyDefaultSample">
       <option v-for="v in vendors" :key="v" :value="v">{{ v }}</option>
     </select>
     <button class="primary" @click="parse">解析</button>
@@ -119,12 +120,19 @@ const app = createApp({
       this.version = v ? v.version : '';
       this.vendors = v ? (v.vendors || []) : [];
       this.vendor = this.vendors[0] || '';
+      this.applyDefaultSample();
     },
     onProtocol() { this.selectProtocol(this.protocol); },
     onVersion() {
       const v = this.protocol.versions.find(x => x.version === this.version);
       this.vendors = v ? (v.vendors || []) : [];
       this.vendor = this.vendors[0] || '';
+      this.applyDefaultSample();
+    },
+    // 按「协议/版本/厂商」取默认报文；未配置时清空输入框
+    applyDefaultSample() {
+      const key = [this.protocol.id, this.version, this.vendor].join('/');
+      this.hexText = (window.MESSAGE_SAMPLES || {})[key] || '';
     },
     async parse() {
       const body = { protocol: this.protocol.id, version: this.version, vendor: this.vendor || null, hex: this.hexText };
